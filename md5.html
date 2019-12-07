@@ -1,14 +1,14 @@
-﻿<!doctype html>
+<!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
-    <title>MD5</title>
+    <title>Romazanov 403 </title>
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1">
   </head>
   <body>
-    <h3 style="text-align: center;">MD5</h3>
+    <h3 style="text-align: center;">Romazanov R 403  SHA256, MD5</h3>
 
     <form
       style="width: 80%; margin: 0 auto;"
@@ -19,6 +19,7 @@
       <input
         style="width: 100%; margin-bottom: 20px"
         type='text'
+        value=""
         name='inputDataEmail'
         id='inputDataEmail'>
       Password:
@@ -26,13 +27,19 @@
       <input
         style="width: 100%; margin-bottom: 20px"
         type='text'
+        value=""
         name='inputDataPassword'
         id='inputDataPassword'>
       <br>
       <input
+        style="width: 100%;"
+        type='button'
+        id='RzSha256'
+        value='Sha256'>
+      <input
         style="width: 100%; margin-bottom: 20px"
         type='button'
-        id='SignInMd5'
+        id='RzInMd5'
         value='MD5'>
       <br>
       Result password hash code:
@@ -44,6 +51,133 @@
         id='hashResult'>
     </form>
     <script>
+      const SHA256 = (s) => {
+            const chrsz = 8;
+            // prevent out of renge
+            const safeAdd = (x, y) => {
+                const lsw = (x & 65535) + (y & 65535);
+                const msw = (x >> 16) + (y >> 16) + (lsw >> 16);
+                return (msw << 16) | (lsw & 65535);
+            }
+            // Rotates right (circular right shift) value x by n positions
+            const S = (X, n) => {
+                return (X >>> n) | (X << (32 - n));
+            }
+            const R = (X, n) => {
+                return (X >>> n);
+            }
+            // Logical functions 'choice'
+            const Ch = (x, y, z) => {
+                return ((x & y) ^ ((~x) & z));
+            }
+            // Logical functions 'majority'
+            const Maj = (x, y, z) => {
+                return ((x & y) ^ (x & z) ^ (y & z));
+            }
+            // Logical functions
+            const Sigma0256 = (x) => {
+                return (S(x, 2) ^ S(x, 13) ^ S(x, 22));
+            }
+            // Logical functions
+            const Sigma1256 = (x) => {
+                return (S(x, 6) ^ S(x, 11) ^ S(x, 25));
+            }
+            // Logical functions
+            const Gamma0256 = (x) => {
+                return (S(x, 7) ^ S(x, 18) ^ R(x, 3));
+            }
+            // Logical functions
+            const Gamma1256 = (x) => {
+                return (S(x, 17) ^ S(x, 19) ^ R(x, 10));
+            }
+            const coreSha256 = (m, l) => {
+                // constants 
+                const K = new Array(
+                    1116352408, 1899447441, 3049323471, 3921009573, 
+                    961987163, 1508970993, 2453635748, 2870763221, 
+                    3624381080, 310598401, 607225278, 1426881987, 
+                    1925078388, 2162078206, 2614888103, 3248222580, 
+                    3835390401, 4022224774, 264347078, 604807628, 
+                    770255983, 1249150122, 1555081692, 1996064986, 
+                    2554220882, 2821834349, 2952996808, 3210313671, 
+                    3336571891, 3584528711, 113926993, 338241895, 
+                    666307205, 773529912, 1294757372, 1396182291, 
+                    1695183700, 1986661051, 2177026350, 2456956037, 
+                    2730485921, 2820302411, 3259730800, 3345764771, 
+                    3516065817, 3600352804, 4094571909, 275423344, 
+                    430227734, 506948616, 659060556, 883997877, 
+                    958139571, 1322822218, 1537002063, 1747873779, 
+                    1955562222, 2024104815, 2227730452, 2361852424, 
+                    2428436474, 2756734187, 3204031479, 3329325298);
+                // initial hash value 
+                const HASH = new Array(
+                    1779033703, 3144134277, 1013904242, 
+                    2773480762, 1359893119, 2600822924, 
+                    528734635, 1541459225);
+                // 1 - prepare message schedule 'W'
+                const W = new Array(64);
+                let a, b, c, d, e, f, g, h, i, j;
+                let T1, T2;
+                m[l >> 5] |= 0x80 << (24 - l % 32);
+                m[((l + 64 >> 9) << 4) + 15] = l;
+                // HASH COMPUTATION
+                for (let i = 0; i < m.length; i += 16) {
+                    // 2 - initialise working variables a, b, c, d, e, f, g, h with previous hash value
+                    a = HASH[0];
+                    b = HASH[1];
+                    c = HASH[2];
+                    d = HASH[3];
+                    e = HASH[4];
+                    f = HASH[5];
+                    g = HASH[6];
+                    h = HASH[7];
+                    // 3 - main loop (note '>>> 0' for 'addition modulo 2^32')
+                    for (let j = 0; j < 64; j++) {
+                        if (j < 16) W[j] = m[j + i];
+                        else W[j] = safeAdd(safeAdd(safeAdd(Gamma1256(W[j - 2]), W[j - 7]), Gamma0256(W[j - 15])), W[j - 16]);
+                        T1 = safeAdd(safeAdd(safeAdd(safeAdd(h, Sigma1256(e)), Ch(e, f, g)), K[j]), W[j]);
+                        T2 = safeAdd(Sigma0256(a), Maj(a, b, c));
+                        h = g;
+                        g = f;
+                        f = e;
+                        e = safeAdd(d, T1);
+                        d = c;
+                        c = b;
+                        b = a;
+                        a = safeAdd(T1, T2);
+                    }
+                    // 4 - compute the new intermediate hash value (note '>>> 0' for 'addition modulo 2^32')
+                    HASH[0] = safeAdd(a, HASH[0]);
+                    HASH[1] = safeAdd(b, HASH[1]);
+                    HASH[2] = safeAdd(c, HASH[2]);
+                    HASH[3] = safeAdd(d, HASH[3]);
+                    HASH[4] = safeAdd(e, HASH[4]);
+                    HASH[5] = safeAdd(f, HASH[5]);
+                    HASH[6] = safeAdd(g, HASH[6]);
+                    HASH[7] = safeAdd(h, HASH[7]);
+                }
+                return HASH;
+            }
+            // convert string msg into 512-bit blocks (array of 16 32-bit integers)
+            const str2binb = (str) => {
+                const bin = Array();
+                const mask = (1 << chrsz) - 1; // 128
+                for (let i = 0; i < str.length * chrsz; i += chrsz) {
+                    bin[i >> 5] |= (str.charCodeAt(i / chrsz) & mask) << (24 - i % 32);
+                }
+                return bin;
+            }
+            const binb2hex = (binarray) => {
+                const hex_tab = '0123456789ABCDEF';
+                let str = '';
+                for (let i = 0; i < binarray.length * 4; i++) {
+                    str += hex_tab.charAt((binarray[i >> 2] >> ((3 - i % 4) * 8 + 4)) & 0xF) +
+                        hex_tab.charAt((binarray[i >> 2] >> ((3 - i % 4) * 8)) & 0xF);
+                }
+                return str;
+            }
+            return binb2hex(coreSha256(str2binb(s), s.length * chrsz)); // add trailing chrsz 0x8 '1' bit (+ 0's padding) to string 
+        }
         const MD5 = (s) => {
             // Let [abcd k s i] denote the operation a = b + ((a + F(b,c,d) + X[k] + T[i]) <<< s).
             const k = (a, b, c, d, x, s, t) => {
@@ -89,7 +223,7 @@
                 return e
             }(s);
             // init const
-a = 1732584193;
+            a = 1732584193;
             b = 4023233417;
             c = 2562383102;
             d = 271733878;
@@ -175,47 +309,19 @@ a = 1732584193;
             // of the four registers by the value it had before this block was started.)
             return (p(a) + p(b) + p(c) + p(d)).toLowerCase();
         }
-const auth = (method, mode) => {
+        const auth = (method, mode) => {
             const email = document.getElementById('inputDataEmail').value;
             const password = document.getElementById('inputDataPassword').value;
             const hash = method === 'sha256' ? SHA256(password) : MD5(password);
-            document.getElementById('hashResult').value = hash;
-            mode === 'sign in' ? signIn(email, hash) : signUp(email, hash);
-        }
-        const request = (method, url, data) => {
-            const xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function() {
-                if (this.readyState == 4 && this.status == 200) {
-                    alert('Successful:' + this.responseText)
-                } else if (this.readyState == 4 && this.status == 400) {
-                    alert('Failure: ' + this.responseText)
-                }
-            };
-            xhttp.open(method, url, true);
-            xhttp.setRequestHeader("Content-type", "application/json");
-            xhttp.send(data);
-        }
-        const signUp = (email, password) => {
-            request("POST", 'http://localhost:3000/api/users/signup', JSON.stringify({
-                email,
-                password
-            }));
-        }
-        const signIn = (email, password) => {
-            request("POST", 'http://localhost:3000/api/users/signin', JSON.stringify({
-                email,
-                password
-            }));
+            document.getElementById('hashResult').value = hash
         }
         
-        document.getElementById('SignInMd5').onclick = () => {
-            auth('md5', 'sign in');
+        document.getElementById('RzSha256').onclick = () => {
+            auth('sha256', 'sign in');
             return false;
         }
-
-      
-        document.getElementById('SignUpMd5').onclick = () => {
-            auth('md5', 'sign up');
+        document.getElementById('RzInMd5').onclick = () => {
+            auth('md5', 'sign in');
             return false;
         }
     </script>
